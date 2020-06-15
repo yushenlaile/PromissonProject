@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="my.mapper.PermissonMapper" >
+  <resultMap id="BaseResultMap" type="my.domain.Permisson" >
+    <id column="pid" property="pid" jdbcType="BIGINT" />
+    <result column="pname" property="pname" jdbcType="VARCHAR" />
+    <result column="presouce" property="presouce" jdbcType="VARCHAR" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from permisson
+    where pid = #{pid,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="my.domain.Permisson" >
+    insert into permisson (pid, pname, presouce
+      )
+    values (#{pid,jdbcType=BIGINT}, #{pname,jdbcType=VARCHAR}, #{presouce,jdbcType=VARCHAR}
+      )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="my.domain.Permisson" >
+    update permisson
+    set pname = #{pname,jdbcType=VARCHAR},
+      presouce = #{presouce,jdbcType=VARCHAR}
+    where pid = #{pid,jdbcType=BIGINT}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select pid, pname, presouce
+    from permisson
+    where pid = #{pid,jdbcType=BIGINT}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select pid, pname, presouce
+    from permisson
+  </select>
+
+<!-- //根据角色的id获取角色的所有的权限-->
+    <!--/*SQL语句1 -多表联合查询*/
+    /*SELECT   permisson.* FROM  permisson LEFT JOIN rolerelpermisson  ON permisson.`pid`=rolerelpermisson.`pid` WHERE rolerelpermisson.`rid`=5*/
+
+    /*SQL语句2：先在权限角色关系表中查出某个Rid对应的Pid(可能有多个),然后根据这些pid在权限表中查出对应权限
+         select   * from  permisson where pid in(SELECT rolerelpermisson.pid from rolerelpermisson where rid=#{rid})
+    */-->
+    <select id="getPermissonbyroleid" resultType="my.domain.Permisson">
+    select   * from  permisson where pid in(SELECT rolerelpermisson.pid from rolerelpermisson where rid=#{rid})
+    </select>
+</mapper>

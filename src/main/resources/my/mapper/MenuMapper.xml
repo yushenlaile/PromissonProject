@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="my.mapper.MenuMapper" >
+  <resultMap id="BaseResultMap" type="my.domain.Menu" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="text" property="text" jdbcType="VARCHAR" />
+    <result column="url" property="url" jdbcType="VARCHAR" />
+   <!-- <result column="parentid" property="parentid" jdbcType="BIGINT" />-->
+      <!--把查询到的某几个字段的数据赋值给关联的对象类型字段-->
+      <!--columnPrefix  因为这两个表有相同的字段名 故要加上列的前缀（别名） 以表示是哪个表的字段-记录 -->
+      <association property="parent" javaType="Menu" columnPrefix="m_">
+          <id property="id"  column="id"></id>
+          <result property="text" column="text"></result>
+          <result property="url" column="url"></result>
+      </association>
+  </resultMap>
+
+
+    <resultMap id="BaseResultMap2" type="my.domain.Menu">
+        <id column="id" property="id" jdbcType="BIGINT" />
+        <result column="text" property="text" jdbcType="VARCHAR" />
+        <result column="url" property="url" jdbcType="VARCHAR" />
+
+        <!--把查询到的某几个字段的数据赋值给关联的对象类型字段-->
+       <association property="permisson" javaType="Permisson">
+           <id column="pid" property="pid" jdbcType="BIGINT" />
+           <result column="pname" property="pname" jdbcType="VARCHAR" />
+           <result column="presouce" property="presouce" jdbcType="VARCHAR" />
+       </association>
+
+        <!--   ofType list集合的泛型类型  javaType关联字段的类型 -->
+        <!--collection  会把查询结果的每一行数据都封装成一个对应的 ofType类型对象  再赋值给关联的集合类型对象-->
+        <collection property="children"  ofType="Menu" javaType="list"  select="my.mapper.MenuMapper.getziCaidan" column="id">
+
+        </collection>
+
+    </resultMap>
+
+
+    <!-- /*获取树 tree的数据*/
+       分步查询-先查出根菜单(根菜单parentid为null  要用关键词is），再根据根菜单的id查出它的子菜单
+      -->
+    <select id="getTreeData"  resultMap="BaseResultMap2">
+     select * from  menu left join  permisson on menu.permissonid=permisson.pid where parentid IS null
+    </select>
+
+    <!--/*获取一个菜单的所有的子菜单*/-->
+    <select id="getziCaidan" resultMap="BaseResultMap2">
+         select * from  menu left join  permisson on menu.permissonid=permisson.pid   where parentid =#{id}
+    </select>
+
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from menu
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+
+    <!--删除一个菜单的所有子菜单-->
+    <delete id="deletezicaidan">
+        delete  from   menu where parentid=#{id}
+    </delete>
+
+    <insert id="insert" parameterType="my.domain.Menu" >
+    insert into menu ( text, url,
+      parentid)
+    values ( #{text,jdbcType=VARCHAR}, #{url,jdbcType=VARCHAR},
+          #{parent.id,jdbcType=BIGINT})
+   </insert>
+
+    <update id="updateByPrimaryKey" parameterType="my.domain.Menu" >
+    update menu
+    set text = #{text},
+      url = #{url},
+      parentid = #{parent.id}
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, text, url, parentid
+    from menu
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
+   <!-- /*获取所有的菜单*/-->
+  <select id="selectAll" resultMap="BaseResultMap" >
+SELECT m1.*,m2.`id`AS m_id,m2.`text` AS m_text, m2.`url`AS m_url FROM menu AS m1
+LEFT JOIN menu AS m2 ON m1.`parentid`=m2.`id`  ORDER BY m1.id ASC</select>
+
+
+    <!--   根据 选择的父菜单的id 去查询选择的父菜单（查询选择的父菜单-它的父菜单id）-->
+    <select id="selectParentid" resultType="java.lang.Long">
+         select  parentid from  menu where id=#{id}
+    </select>
+
+
+
+</mapper>

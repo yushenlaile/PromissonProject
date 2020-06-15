@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="my.mapper.employeeMapper" >
+  <resultMap id="BaseResultMap" type="my.domain.employee" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="username" property="username" jdbcType="VARCHAR" />
+    <result column="tel" property="tel" jdbcType="VARCHAR" />
+    <result column="state" property="state" jdbcType="BIT" />
+    <result column="email" property="email" jdbcType="VARCHAR" />
+    <result column="admin" property="admin" jdbcType="BIT" />
+    <result column="inputtime" property="inputtime" jdbcType="TIMESTAMP" />
+      <result column="password" property="password" />
+
+      <!--把查询到的某几个字段的数据赋值给关联的对象类型字段-->
+      <!--columnPrefix  因为这两个表有相同的字段名 故要加上列的前缀（别名） 以表示是哪个表的字段-记录 -->
+      <association property="department"  javaType="department" columnPrefix="d_">
+          <id column="id" property="id"></id>
+          <result column="name" property="name"></result>
+      </association>
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from employee
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+    <!--删除   员工角色关系表中的数据（删除员工角色关系根据员工的 id）-->
+    <delete id="deleteemployeerelrole">
+   delete  from  employeerelrole where id=#{id}
+    </delete>
+    <!--添加员工并获取自增字段的值（赋值给传入的对象）-->
+  <insert id="insert" parameterType="my.domain.employee" useGeneratedKeys="true" keyProperty="id" >
+    insert into employee
+    (username,
+     tel,
+     password,
+      state,
+      email,
+      admin,
+     deptid,
+      inputtime)
+    values (#{username},
+      #{tel},
+      #{password},
+      #{state},
+      #{email},
+      #{admin},
+      #{department.id},
+      #{inputtime})
+  </insert>
+
+
+
+
+    <!--  /* 保存员工与角色的关系*/-->
+    <!-- 保存  员工相关联的角色 到员工角色关系表中(可能有多个)-->
+    <insert id="savemployeeRelrole">
+    insert  into employeeRelrole (id,rid)values (#{id},#{rid})
+    </insert>
+
+    <update id="updateByPrimaryKey" parameterType="my.domain.employee" >
+    update employee
+    set username = #{username,jdbcType=VARCHAR},
+      tel = #{tel,jdbcType=VARCHAR},
+      email = #{email,jdbcType=VARCHAR},
+      admin = #{admin,jdbcType=BIT},
+      deptid = #{department.id,jdbcType=BIGINT},
+      inputtime = #{inputtime,jdbcType=TIMESTAMP}
+      where id = #{id}
+  </update>
+
+    <update id="updateEmployeeState" >
+        update employee set state=false where id=#{id};
+    </update>
+
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select id, username, tel, state, email, admin, deptid, inputtime
+    from employee
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
+    <!--sql片段-->
+    <!--当传进来的参数content字段有值就，按名字或电话或邮箱进行模糊查询-->
+    <!--concat是Mysql中字符串的拼接-->
+    <sql id="where_sql">
+        <where>
+            <if test="content !=null and content !=''">
+                and employee.username like concat('%',#{content},'%')
+                or employee.tel   like "%"#{content}"%"
+                or employee.email like "%"#{content}"%"
+            </if>
+        </where>
+    </sql>
+
+  <select id="selectAllemployee" resultMap="BaseResultMap" >
+  SELECT employee.*,d.`id`AS d_id, d.`name` AS d_name
+    FROM employee LEFT JOIN department AS d ON employee.`deptid`=d.`id`
+    <include refid="where_sql"></include>
+    ORDER BY employee.inputtime DESC
+  </select>
+ <!--   /* 根据用户名获取用户*/-->
+    <select id="getEmployeeByUsername" resultType="my.domain.employee">
+      select  * from  employee  where username=#{usernname}
+    </select>
+
+    <!-- 根据员工id去查询它拥有的角色名*/-->
+    <!--有两种查询方法 1 select  rname  from  role where  rid in (select  rid  from employeerelrole where id=#{id})
+    2 多表联合查询  SELECT role.`rname` FROM  employeerelrole LEFT JOIN   role  ON employeerelrole.`rid`=role.`rid`
+    WHERE employeerelrole.`id`=#{id}
+    -->
+    <select id="getRolesByemployeeId" resultType="java.lang.String">
+SELECT role.`rname` FROM  employeerelrole LEFT JOIN   role  ON employeerelrole.`rid`=role.`rid` WHERE employeerelrole.`id`=#{id}
+    </select>
+
+  <!--  /*查询当前用户拥有的权限资源名称 根据当前用户身份信息*/-->
+    <select id="getPermissonsByemployeeId" resultType="java.lang.String">
+SELECT   distinct permisson.`presouce`FROM rolerelpermisson LEFT JOIN  permisson  ON rolerelpermisson.`pid`=permisson.`pid`
+WHERE rolerelpermisson.`rid` IN(SELECT rid FROM  employeerelrole  WHERE id=#{id})
+    </select>
+
+    <!--  /*根据部门名字获取部门id*/-->
+    <select id="getDepartmentid" resultType="java.lang.Long">
+        select id from department where name=#{name}
+    </select>
+
+
+</mapper>

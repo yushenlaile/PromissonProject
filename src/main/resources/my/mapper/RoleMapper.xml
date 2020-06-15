@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="my.mapper.RoleMapper" >
+  <resultMap id="BaseResultMap" type="my.domain.Role" >
+    <id column="rid" property="rid" jdbcType="BIGINT" />
+    <result column="rnum" property="rnum" jdbcType="VARCHAR" />
+    <result column="rname" property="rname" jdbcType="VARCHAR" />
+  </resultMap>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from role
+    where rid = #{rid,jdbcType=BIGINT}
+  </delete>
+
+    <!--删除  权限角色关系表中的数据根据rid （打破关系）-->
+    <delete id="deleterolerelpermisson">
+        delete from  rolerelpermisson where rid=#{rid}
+    </delete>
+
+    <!--插入角色信息并获取自增字段的值（赋值给传入的对象）-->
+  <insert id="insert" parameterType="my.domain.Role"  useGeneratedKeys="true" keyProperty="rid">
+    insert into role ( rnum, rname)
+    values ( #{rnum,jdbcType=VARCHAR}, #{rname,jdbcType=VARCHAR})
+  </insert>
+    <!--保存角色相关联的权限(向它们的中间表中插入数据-->
+    <insert id="insertRolerelpermisson">
+        insert into rolerelpermisson (rid, pid) values (#{rid},#{pid})
+    </insert>
+
+    <update id="updateByPrimaryKey" parameterType="my.domain.Role" >
+    update role
+    set rnum = #{rnum,jdbcType=VARCHAR},
+        rname = #{rname,jdbcType=VARCHAR}
+    where rid = #{rid,jdbcType=BIGINT}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select rid, rnum, rname
+    from role
+    where rid = #{rid,jdbcType=BIGINT}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select rid, rnum, rname
+    from role
+  </select>
+     <!--获取角色id根据员工的ID-->
+    <select id="getRoleBYeid" resultType="java.lang.Long">
+          select  rid from employeerelrole where  id=#{id}
+    </select>
+</mapper>

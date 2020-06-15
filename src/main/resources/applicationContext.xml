@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/aop
+    http://www.springframework.org/schema/aop/spring-aop.xsd
+     http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+">
+    <!--注解扫描-->
+    <context:component-scan base-package="my"/>
+
+    <!--配置开启AOP注解-->
+    <aop:aspectj-autoproxy></aop:aspectj-autoproxy>
+
+    <!--导入spring的mybatis配置-->
+    <import resource="classpath:application-mybatis.xml"/>
+
+    <!--导入springMVC-->
+    <import resource="classpath:application-mvc.xml"/>
+
+    <!--导入Shiro-->
+    <import resource="application-shiro.xml"></import>
+
+    <!-- aop配置 日志配置 -->
+
+    <!--将切面交给Spring框架去管理-->
+    <bean id="SystemAspect" class="my.Aspect.SystemAspect"></bean>
+
+    <aop:config>
+        <!--切入点表达式（用来配置需要被增强的方法（切入点））-->
+        <aop:pointcut expression="execution(* my.service.*.*(..))"
+                      id="servicePoint" />
+        <!--配置切面 -->
+        <aop:aspect ref="SystemAspect">
+            <!--<aop:after>这是最终通知（在目标方法执行之后进行的操作（在目标方法执行之后增强一些内容）-无论目标方法是否有异常）
+              method表示通知（即要增强的内容） pointcut表示切入点（即需要被增强的方法） -->
+            <aop:after method="Writelog" pointcut-ref="servicePoint"/>
+        </aop:aspect>
+    </aop:config>
+
+</beans>

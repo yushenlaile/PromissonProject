@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/aop
+    http://www.springframework.org/schema/aop/spring-aop.xsd
+     http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+">
+    <!--注解扫描-->
+    <context:component-scan base-package="my"/>
+
+    <!--spring-Mybatis整合-->
+    <!--spring Mybatis的整合
+  （要导入Mybaits-spring的jar包
+  -它将允许 MyBatis 参与到 Spring 的事务管理之中，创建映射器 mapper 和 SqlSession 并注入到 bean 中）-->
+    <!--加载数据库属性文件-->
+    <context:property-placeholder location="classpath:db.properties"/>
+    <!--Druid连接池-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <!--引入数据库属性文件中的属性-->
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <!--属性文件当中的名称不能和name名称一样-->
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+    <!-- 配置事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!-- 注入数据源 -->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- 开启注解事务 -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <!-- Mybatis的工厂 SqlSessionFactory工厂交给Spring去管理-->
+    <!--让SqlSessionFactory工厂加载核心配置文件中的信息-->
+    <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--依赖注入Spring中配置的Druid连接池到SqlSessionFactory工厂中-->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 让sqlSessionFactory去加载Mybatis的核心配置文件     位置 -->
+        <property name="configLocation" value="classpath:sqlMapConfig.xml"/>
+        <!--配置（加载）mapper映射文件（SQL映射文件）的路径用来加载SQL映射文件不在mybatis核心配置文件中加载了   -->
+        <!--加载my/mapper/这个包下所有的SQL映射文件(注意SQL映射文件名前缀要与Mapper接口名相同)-->
+        <property name="mapperLocations" value="classpath:my/mapper/*.xml"/>
+
+    </bean>
+
+    <!-- 配置Mapper接口的扫描 -->
+    <!--即把Mapper接口都交给Spring框架去管理   我们可以在Service层直接依赖注入Mapper接口  而不是靠sqlsesssion,getMapper了-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 配置Mapper接口扫描包  mapper接口都在该包下-->
+        <property name="basePackage" value="my.mapper"/>
+    </bean>
+
+</beans>
