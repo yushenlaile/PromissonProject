@@ -10,7 +10,6 @@ import my.domain.department;
 import my.domain.employee;
 import my.service.employeeService;
 import my.Util.ResponseJsonResult;
-import org.apache.catalina.servlet4preview.http.HttpServletRequest;
 import org.apache.commons.io.IOUtils;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -29,6 +28,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -204,7 +204,7 @@ public class employeeController {
     /*模板文件下载--下载模板Excel文件*/
     @RequestMapping("/downLoadtml.action")
     public Object downLoadtml(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        File webroot = new File(request.getServletContext().getRealPath("/"));
+        File webroot = new File(request.getRealPath("/"));
         System.out.println("webroot:" + webroot);
         //目标下载文件
         File file = new File(webroot, "/static/模板文件.xls");
@@ -241,7 +241,7 @@ public class employeeController {
         String suffix = getSuffix(MultipartFile.getOriginalFilename());
         System.out.println(suffix);
         /*获取web项目绝对路径即webroot目录路径*/
-        File webroot=new File(request.getServletContext().getRealPath("/"));;
+        File webroot=new File(request.getRealPath("/"));;
 
         /*生成唯一的目录名*/
         String   foldername= getuuid();
@@ -457,7 +457,7 @@ public class employeeController {
         // 获取MultipartFile文件
         MultipartFile mf = mhr.getFile("file"); // 表单里的 name='file'（即表单参数中参数名为file的参数）
         if (mf != null && mf.isEmpty() == false) {
-            File webroot = new File(request.getServletContext().getRealPath("/"));
+            File webroot = new File(request.getRealPath("/"));
             System.out.println("webroot:" + webroot);
             // 临时目录（在webroot目录下创建的临时目录）---上传文件暂时存放的地方
             File tmpdir = new File(webroot, "/static/Exceltmp");
